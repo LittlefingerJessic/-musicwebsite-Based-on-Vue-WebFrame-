@@ -53,7 +53,6 @@ export default {
       this.$refs.loginformRef.resetFields()
     },
     getkqk () {
-      console.log('gs')
       this.cookie = window.sessionStorage.getItem('cookie')
       if (this.cookie) this.$router.push('/myplaylist')
     },

@@ -9,10 +9,10 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    redirect: '/findmusic'
+    redirect: '/find'
   },
   {
-    path: '/findmusic',
+    path: '/find',
     component: Login,
     children: [
       { path: '/findmusic', component: Findmusic },

@@ -9,23 +9,15 @@
       </el-menu-item>
       <el-submenu index="100" style='padding-top:50px;font-weight:bold'>
         <template slot="title">
-          <span>创建的歌单(12)</span>
+          <span>我的歌单({{playge.length}})</span>
         </template>
-        <el-menu-item-group>
-          <el-menu-item index="100-1">选项1</el-menu-item>
-        </el-menu-item-group>
-      </el-submenu>
-       <el-submenu index="150" style='font-weight:bold'>
-        <template  slot='title'>
-          <span>创建的歌单(12)</span>
-        </template>
-        <el-menu-item-group>
-          <el-menu-item index="150-1">选项1</el-menu-item>
+        <el-menu-item-group v-for='item in playge' :key='item.id'>
+          <el-menu-item @click='dashi' :index="item.id+''">{{item.name}}</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
     </el-menu></el-aside>
   <el-main><div><img class='third' src="https://p1.music.126.net/xoJZ7lvXrYQ-EkBZxvA5DA==/109951165440925894.jpg?param=200y200" alt="">
-  <span style='font-size:20px;padding-left:20px'>我喜欢的音乐</span><span class='forth'><img src="http://p1.music.126.net/fxsvhevZ1e3X1MjbWKEojw==/7806532558307528.jpg?param=35y35" alt=""><span style='padding-left:10px'>一想到你呀</span><span style='padding-left:10px'>2015-07-28 创建</span></span>
+  <span class='gbcz' style='font-size:20px;padding-left:20px'>我喜欢的音乐</span><span class='forth'><img src="http://p1.music.126.net/fxsvhevZ1e3X1MjbWKEojw==/7806532558307528.jpg?param=35y35" alt=""><span style='padding-left:10px'>一想到你呀</span><span style='padding-left:10px'>2015-07-28 创建</span></span>
   </div><br><br>
   <span style='font-size:20px'>歌曲列表</span><span style='padding-left:20px'>391首歌</span><span style='padding-left:480px'>播放： 3644次</span>
    <el-table
@@ -34,14 +26,12 @@
     style="width: 100%">
     <el-table-column
       prop="name"
-      label="歌曲标题"
-      width="180">
+      label="歌曲标题">
     </el-table-column>
     <el-table-column
       prop="dt"
       label="时长"
-      :formatter="formatter"
-      width="180">
+      :formatter="formatter">
     </el-table-column>
     <el-table-column
       prop="ar[0].name"
@@ -51,24 +41,70 @@
       prop="al.name"
       label="专辑">
     </el-table-column>
+     <el-table-column >
+      <template slot-scope="scope">
+        <el-button
+          size="mini"
+          @click="handleEdit(scope.row.id)">播放</el-button>
+      </template>
+    </el-table-column>
   </el-table>
   </el-main>
+  <audio :src="mp3"></audio>
 </el-container></div></div>
 </template>
-
 <script>
 export default {
   data () {
     return {
       cookie: '',
-      gedansongs: [
-      ]
+      gedansongs: [],
+      geid: [],
+      mp3: '',
+      playge: []
     }
   },
   created () {
     this.getged()
   },
   methods: {
+    async dashi (key) {
+      document.getElementsByClassName('gbcz')[0].innerHTML = key.$el.innerText
+      this.cookie = window.sessionStorage.getItem('cookie')
+      const { data: res } = await this.$http.get('playlist/detail', {
+        params: {
+          id: key.index,
+          cookie: this.cookie
+        }
+      })
+      var a = res.playlist.trackIds
+      var b = []
+      for (var i = 0; i < a.length; i++) {
+        b.push(a[i].id)
+      }
+      var c = b.toString()
+      const { data: nsam } = await this.$http.get('/song/detail', {
+        params: {
+          ids: c,
+          cookie: this.cookie
+        }
+      })
+      this.gedansongs = nsam.songs
+    },
+    async handleEdit (row) {
+      window.sessionStorage.setItem('url', '')
+      window.sessionStorage.setItem('id', row)
+      const { data: res } = await this.$http.get('/song/url', {
+        params: { id: row }
+      })
+      const { data: red } = await this.$http.get('/song/detail', {
+        params: { ids: row }
+      })
+      window.sessionStorage.setItem('time', red.songs[0].dt)
+      this.mp3 = res.data[0].url
+      window.sessionStorage.setItem('url', this.mp3)
+      location.reload()
+    },
     async getged () {
       this.cookie = window.sessionStorage.getItem('cookie')
       const { data: res } = await this.$http.get('playlist/detail?id=93231010', {
@@ -89,6 +125,14 @@ export default {
         }
       })
       this.gedansongs = nsam.songs
+      const { data: nba } = await this.$http.get('/user/playlist', {
+        params: {
+          uid: 3940321498,
+          cookie: this.cookie
+        }
+      })
+      this.playge = nba.playlist
+      console.log(this.playge)
     },
     formatter (row, column) {
       var bc = '0' + parseInt(Math.round(row[column.property] / 1000) / 60).toString()
