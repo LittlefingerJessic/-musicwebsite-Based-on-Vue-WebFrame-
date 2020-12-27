@@ -100,6 +100,7 @@ export default {
     this.getrank()
     this.getnr()
     this.getcrea()
+    this.getgs()
   },
   methods: {
     async getnewestalbumlist () {

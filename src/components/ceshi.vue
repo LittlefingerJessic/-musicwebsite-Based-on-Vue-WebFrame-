@@ -58,15 +58,15 @@ export default {
     },
     login () {
       this.$refs.loginformRef.validate(async valid => {
-        // console.log(valid)
         if (!valid) return
         const times = Date.parse(new Date())
         const { data: res } = await this.$http.post('login/cellphone?' + 'time=' + times, this.loginForm)
-        // console.log(res)
         if (res.code !== 200) return this.$message.error('登陆失败')
         this.$message.success('登陆成功')
         console.log(res.cookie)
         window.sessionStorage.setItem('cookie', res.cookie)
+        window.sessionStorage.setItem('uid', res.account.id)
+        window.sessionStorage.setItem('touxiang', res.profile.avatarUrl)
         this.$router.push('/findmusic')
         // 1.将登陆成功之后的token，保存到客户端的sessionStorage中
         // 1.1项目中除了登陆之外的其他api接口，必须在登陆之后才能访问

@@ -45,29 +45,66 @@
       <template slot-scope="scope">
         <el-button
           size="mini"
-          @click="handleEdit(scope.row.id)">播放</el-button>
+          @click="handleEdit(scope.$index,scope.row.id)"><i style='font-size:30px' class='el-icon-video-play'></i></el-button>
       </template>
     </el-table-column>
   </el-table>
+  <div style='font-size:20px'>评论<span style='padding-left:400px;font-size:10px'>共{{total}}条评论</span></div>
+  <img style='width:50px;height:50px' :src='headph' alt=""><el-input style='width:900px;padding-left:50px;height:60px' placeholder="请输入评论"></el-input><el-button type='primary' style='float:right'>评论</el-button>
+  <div>热门评论</div><div style='padding-bottom:20px' v-for='site1 in hotcomments' :key='site1.commentId'>
+<img style='width:50px;height:50px' :src='site1.user.avatarUrl' alt=""><span style='padding-left:20px'>{{site1.user.nickname}}:{{site1.content}}</span><div style='float:right'>{{site1.likedCount}}点赞<span>回复</span></div></div>
+<div>最新评论</div><div style='padding-bottom:20px' v-for='site in comments' :key='site.commentId'>
+<img style='width:50px;height:50px' :src='site.user.avatarUrl' alt=""><span style='padding-left:20px'>{{site.user.nickname}}:{{site.content}}</span><div style='float:right'>{{site.likedCount}}点赞<span>回复</span></div></div>
+   <div class="block" style='padding-bottom:40px'>
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="(queryInfo.offset/5)+1"
+      :page-sizes="[5, 10, 15, 20]"
+      :page-size="5"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
+  </div>
   </el-main>
-  <audio :src="mp3"></audio>
 </el-container></div></div>
 </template>
 <script>
 export default {
+  inject: ['reload'],
   data () {
     return {
       cookie: '',
       gedansongs: [],
       geid: [],
       mp3: '',
-      playge: []
+      playge: [],
+      headph: '',
+      nickname: '',
+      comments: [],
+      hotcomments: [],
+      total: '',
+      queryInfo: {
+        id: 5377394548,
+        limit: 5,
+        offset: 0
+      }
     }
   },
   created () {
     this.getged()
   },
   methods: {
+    handleSizeChange (newSize) {
+      console.log(newSize)
+      this.queryInfo.limit = newSize
+      this.getged()
+    },
+    handleCurrentChange (newPage) {
+      console.log(newPage)
+      this.queryInfo.offset = (newPage - 1) * 5
+      this.getged()
+    },
     async dashi (key) {
       document.getElementsByClassName('gbcz')[0].innerHTML = key.$el.innerText
       this.cookie = window.sessionStorage.getItem('cookie')
@@ -91,7 +128,7 @@ export default {
       })
       this.gedansongs = nsam.songs
     },
-    async handleEdit (row) {
+    async handleEdit (index, row) {
       window.sessionStorage.setItem('url', '')
       window.sessionStorage.setItem('id', row)
       const { data: res } = await this.$http.get('/song/url', {
@@ -103,10 +140,11 @@ export default {
       window.sessionStorage.setItem('time', red.songs[0].dt)
       this.mp3 = res.data[0].url
       window.sessionStorage.setItem('url', this.mp3)
-      location.reload()
+      this.reload()
     },
     async getged () {
       this.cookie = window.sessionStorage.getItem('cookie')
+      this.headph = window.sessionStorage.getItem('touxiang')
       const { data: res } = await this.$http.get('playlist/detail?id=93231010', {
         params: {
           cookie: this.cookie
@@ -117,6 +155,7 @@ export default {
       for (var i = 0; i < a.length; i++) {
         b.push(a[i].id)
       }
+      window.sessionStorage.setItem('index', b)
       var c = b.toString()
       const { data: nsam } = await this.$http.get('/song/detail', {
         params: {
@@ -132,12 +171,23 @@ export default {
         }
       })
       this.playge = nba.playlist
-      console.log(this.playge)
+      const { data: fsl } = await this.$http.get('/user/detail', {
+        params: {
+          uid: window.sessionStorage.getItem('uid'),
+          cookie: this.cookie
+        }
+      })
+      this.nickname = fsl.profile.nickname
+      const { data: dasl } = await this.$http.get('/comment/playlist', { params: this.queryInfo })
+      this.comments = dasl.comments
+      this.hotcomments = dasl.hotComments
+      this.total = dasl.total
     },
     formatter (row, column) {
       var bc = '0' + parseInt(Math.round(row[column.property] / 1000) / 60).toString()
-      var ac = parseInt(Math.round(row[column.property] / 1000) % 60).toString()
-      return bc + ':' + ac
+      var ac = parseInt(Math.round(row[column.property] / 1000) % 60)
+      if (ac < 10) return bc + ':0' + ac.toString()
+      return bc + ':' + ac.toString()
     }
   }
 }
@@ -145,7 +195,7 @@ export default {
 
 <style lang='less' scoped>
 .sad {
-    width:980px;
+    width:1380px;
     height:100%
 }
 .first {

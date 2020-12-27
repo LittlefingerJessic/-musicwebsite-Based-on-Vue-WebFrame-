@@ -24,9 +24,16 @@
 </el-menu-item>
   <el-menu-item index="9">创造者中心</el-menu-item>
   <el-menu-item class='pinfo gssb'  index="10">登陆</el-menu-item>
-  <el-menu-item index="10"><div class='nsa'><img class='tpa' :src="headerph" alt=""></div></el-menu-item>
+  <el-menu-item index="10"><div class='nsa'><img class='tpa' :src="headerph"><div class='zwu'><div class='thg'><a href="">我的主页</a><br>
+  <a href="">我的消息</a><br>
+  <a href="">我的等级</a><br>
+  <a href="">VIP会员</a><br>
+  <a href="">个人设置</a><br>
+  <a href="">实名认证</a><br>
+  <a href="">退出</a></div></div></div></el-menu-item>
 </el-menu></div></div>
-  </el-header><el-main><router-view></router-view></el-main>
+  </el-header><el-main>
+    <router-view></router-view></el-main>
   <div class='dyjb'>
     <div class='dyj'>
 <div>服务条款</div>
@@ -36,17 +43,18 @@
 <div>意见反馈</div></div></div>
 <div style='height:50px'></div>
 <div class='hdla'>
-  <div class='waniz'><div class='plabd'><div  style='font-size:20px;margin-top:10px' class='glyphicon glyphicon-step-backward'></div><i style='font-size:35px;margin-top:5px' @click='playmusic' class='doub glyphicon glyphicon-play-circle'></i>
-  <div style='font-size:20px;margin-top:10px' class='glyphicon glyphicon-step-forward'></div><span><img style='width:34px;height:34px;margin-top:5px' :src="info[0].al.picUrl" alt=""></span>
-  <span>{{ info[0].name}}<span style='padding-left:8px'>{{info[0].ar[0].name}}</span><div class='prom'><div class='promc'></div></div></span><div class='pzsh'><div @click='adt' class='zszq'><div class='core'></div></div></div>
+  <div class='waniz'><div class='plabd'><div  style='font-size:20px;margin-top:10px' @click='frontsong' class='glyphicon glyphicon-step-backward'></div><i style='font-size:35px;margin-top:5px' @click='playmusic' class='doub glyphicon glyphicon-play-circle'></i>
+  <div style='font-size:20px;margin-top:10px' @click='nextsong' class='glyphicon glyphicon-step-forward'></div><span><img class='plth' style='width:34px;height:34px;margin-top:5px' :src="info[0].al.picUrl"></span>
+  <span><span class='hwsn'>{{ info[0].name}}</span><span class='tpods' style='padding-left:8px'>{{info[0].ar[0].name}}</span><div class='prom'><div class='promc'></div></div></span><div class='pzsh'><div @click='adt' class='zszq'><div class='core'></div></div></div>
   <span class='wuliao' style='margin-top:15px;padding-left:480px'>00:00/{{stime}}</span><span style='margin-top:15px' class='el-icon-folder-add'></span><span style='margin-top:15px' class='glyphicon glyphicon-share'></span>
   <span style='margin-top:15px' class='glyphicon glyphicon-volume-up'></span><span style='margin-top:15px' class='glyphicon glyphicon-retweet'></span>
-  <span style='margin-top:15px' class='el-icon-notebook-2'>369</span></div></div></div>
+  <span style='margin-top:15px' class='el-icon-notebook-2'>{{gedanshuzu.length}}</span></div></div></div>
   <audio class='bgin' :src="mp3"></audio>
 </el-container>
 </template>
 <script>
 export default {
+  inject: ['reload'],
   data () {
     return {
       fastest: [],
@@ -58,7 +66,10 @@ export default {
       info: [],
       stime: '',
       onoff: true,
-      dt: ''
+      dt: '',
+      indx: '',
+      gedanshuzu: [],
+      data: 0
     }
   },
   created () {
@@ -124,8 +135,10 @@ export default {
       const { data: res } = await this.$http.get('/song/detail', { params: { ids: window.sessionStorage.getItem('id') } })
       var a = res.songs[0].dt
       var bc = '0' + parseInt(Math.round(a / 1000) / 60).toString()
-      var ac = parseInt(Math.round(a / 1000) % 60).toString()
-      var kk = bc + ':' + ac
+      var ac = parseInt(Math.round(a / 1000) % 60)
+      var kk
+      if (ac > 9) { kk = bc + ':' + ac.toString() }
+      if (ac < 10) { kk = bc + ':0' + ac.toString() }
       var gettime = parseInt(fczs.innerHTML.split('/')[1].split(':')[0]) * 60 + parseInt(fczs.innerHTML.split('/')[1].split(':')[1])
       pl.addEventListener('timeupdate', function () {
         var timd = Math.round(Math.floor(this.currentTime * 100) / 100)
@@ -152,7 +165,18 @@ export default {
       this.onoff = !this.onoff
     },
     async getgs () {
+      var abc = window.sessionStorage.getItem('index').split(',')
+      this.headerph = window.sessionStorage.getItem('touxiang')
+      this.gedanshuzu = abc
+      // console.log(abc)
       this.mp3 = window.sessionStorage.getItem('url')
+      var bcd = window.sessionStorage.getItem('id')
+      for (var k = 0; k < abc.length; k++) { if (bcd === abc[k]) { this.indx = k } }
+      if (!this.mp3) {
+        window.sessionStorage.setItem('url', 'https://m701.music.126.net/20201226224302/4652e1e1aa575fd262b85ecab887044d/jdymusic/obj/wo3DlMOGwrbDjj7DisKw/5011513855/6dd2/ac7e/ad14/45044bb293c4e99f02b8b1c015b4c603.mp3')
+        window.sessionStorage.setItem('id', 1498506002)
+        window.sessionStorage.setItem('time', 86500)
+      }
       const { data: res } = await this.$http.get('/song/detail', { params: { ids: window.sessionStorage.getItem('id') } })
       this.info = res.songs
       var a = this.info[0].dt
@@ -169,12 +193,70 @@ export default {
     },
     wmd () {
       this.$router.push('/ceshi')
+    },
+    async nextsong () {
+      var dpo = this.indx + 1
+      if (dpo === this.gedanshuzu.length + 1) return
+      var dqb = this.gedanshuzu[dpo]
+      window.sessionStorage.setItem('id', dqb)
+      const { data: resd } = await this.$http.get('/song/url', {
+        params: { id: dqb }
+      })
+      window.sessionStorage.setItem('url', resd.data[0].url)
+      const { data: res } = await this.$http.get('/song/detail', {
+        params: { ids: dqb }
+      })
+      var pl = document.getElementsByClassName('bgin')[0]
+      document.getElementsByClassName('hwsn')[0].innerHTML = res.songs[0].name
+      document.getElementsByClassName('tpods')[0].innerHTML = res.songs[0].ar[0].name
+      document.getElementsByClassName('plth')[0].src = res.songs[0].al.picUrl
+      pl.src = resd.data[0].url
+      this.indx += 1
+      pl.play()
+      this.playmusic()
+    },
+    async frontsong () {
+      var dpo = this.indx - 1
+      if (dpo === -1) return
+      var dqb = this.gedanshuzu[dpo]
+      window.sessionStorage.setItem('id', dqb)
+      const { data: resd } = await this.$http.get('/song/url', {
+        params: { id: dqb }
+      })
+      window.sessionStorage.setItem('url', resd.data[0].url)
+      const { data: res } = await this.$http.get('/song/detail', {
+        params: { ids: dqb }
+      })
+      var pl = document.getElementsByClassName('bgin')[0]
+      document.getElementsByClassName('hwsn')[0].innerHTML = res.songs[0].name
+      document.getElementsByClassName('tpods')[0].innerHTML = res.songs[0].ar[0].name
+      document.getElementsByClassName('plth')[0].src = res.songs[0].al.picUrl
+      pl.src = resd.data[0].url
+      this.indx -= 1
+      pl.play()
+      this.playmusic()
     }
   }
 }
 </script>
 
 <style lang='less' scoped>
+.thg {
+  color:black;
+  display:none;
+  line-height: 20px;
+}
+.nsa:hover .thg {
+  display:block
+}
+.zwu {
+  position:absolute;
+  margin-top:-15px;
+  width:560px;
+  left:50%;
+  transform: translate(-50%);
+  padding-left:240px
+}
 .plabd {
   display: flex;
   justify-content: space-between;
@@ -202,11 +284,6 @@ a {
 }
 img {
   margin-top:-300px;
-}
-.swipe-item {
-  width:729px;
-  height:auto;
-  margin-top:0px
 }
 .el-header {
   padding:0
